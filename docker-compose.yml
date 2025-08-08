@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # 블루/그린 배포를 위한 API 인스턴스들
+  cdl-gateway-blue:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: cdl-gateway:latest
+    env_file:
+      - .env
+    ports:
+      - "18001:8000"
+    environment:
+      - DEPLOYMENT_SLOT=blue
+      - RABBITMQ_HOSTNAME=${RABBITMQ_HOSTNAME:-localhost}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/status/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    networks:
+      - cdl-network
+
+  cdl-gateway-green:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: cdl-gateway:latest
+    env_file:
+      - .env
+    ports:
+      - "18002:8000"
+    environment:
+      - DEPLOYMENT_SLOT=green
+      - RABBITMQ_HOSTNAME=${RABBITMQ_HOSTNAME:-localhost}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/status/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    networks:
+      - cdl-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      cdl-gateway-blue:
+        condition: service_healthy
+      cdl-gateway-green:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - cdl-network
+
+networks:
+  cdl-network:
+    driver: bridge
