@@ -3,12 +3,14 @@ API 라우터 모듈
 통합된 API 엔드포인트 및 라우팅 정의
 """
 import logging
+import time
 from fastapi import APIRouter, Request, Body, status
 from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 
 from app.models.requests import SokindRequest
 from app.services.message_service import MessageService
+from app.services.rabbitmq import get_rabbitmq_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -21,6 +23,35 @@ def health_check() -> Response:
         content="<html><body><h1>CDL Gateway - Health Check OK</h1></body></html>", 
         media_type="text/html"
     )
+
+
+@router.get("/status/rabbitmq")
+def rabbitmq_status():
+    """RabbitMQ 클러스터 상태 확인"""
+    try:
+        client = get_rabbitmq_client()
+        cluster_status = client.get_cluster_status()
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "status": "ok",
+                "cluster": cluster_status,
+                "timestamp": int(time.time())
+            }
+        )
+    except Exception as e:
+        logger.error(f"Failed to get RabbitMQ cluster status: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={
+                "status": "error",
+                "message": str(e),
+                "timestamp": int(time.time())
+            }
+        )
+
+
 
 
 @router.post(
@@ -71,7 +102,7 @@ async def sokind(request: Request, request_body: SokindRequest = Body()):
     """
     Sokind 분석 요청 엔드포인트
     
-    - 요청을 검증하고 적절한 큐로 메시지 전송
+    - 교육 타입별 특화 모델로 변환하여 처리
     - Request ID 추적 지원
     - 클라이언트 IP 추출 및 포함
     """
@@ -85,10 +116,13 @@ async def sokind(request: Request, request_body: SokindRequest = Body()):
         # Request ID 가져오기
         request_id = getattr(request.state, "request_id", None)
         
+        # 특화 모델로 변환 (자동 검증 포함)
+        specialized_model = request_body.to_specialized_model()
+        
         # 메시지 서비스를 통해 전송
         message_service = MessageService()
-        result = message_service.send_message(
-            request_body=request_body,
+        result = message_service.send_message_with_model(
+            model=specialized_model,
             client_ip=client_ip,
             request_id=request_id
         )
@@ -98,7 +132,10 @@ async def sokind(request: Request, request_body: SokindRequest = Body()):
     except Exception as e:
         logger.error(
             f"Error processing sokind request: {str(e)}",
-            extra={"request_id": getattr(request.state, "request_id", None)},
+            extra={
+                "request_id": getattr(request.state, "request_id", None),
+                "edu_type": getattr(request_body, "edu_type", None),
+            },
             exc_info=True,
         )
         return JSONResponse(
