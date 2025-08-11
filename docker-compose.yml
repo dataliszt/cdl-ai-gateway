@@ -13,10 +13,9 @@ services:
       - "18001:8000"
     environment:
       - DEPLOYMENT_SLOT=blue
-      - RABBITMQ_HOSTNAME=${RABBITMQ_HOSTNAME:-localhost}
-      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - AWS_DEFAULT_REGION=${AWS_REGION:-ap-northeast-2}
+      # AWS credentials provided by EC2 Instance Profile / IAM Role
+      # Environment variables will be loaded from AWS Secrets Manager
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/status/"]
@@ -38,10 +37,9 @@ services:
       - "18002:8000"
     environment:
       - DEPLOYMENT_SLOT=green
-      - RABBITMQ_HOSTNAME=${RABBITMQ_HOSTNAME:-localhost}
-      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - AWS_DEFAULT_REGION=${AWS_REGION:-ap-northeast-2}
+      # AWS credentials provided by EC2 Instance Profile / IAM Role
+      # Environment variables will be loaded from AWS Secrets Manager
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/status/"]
