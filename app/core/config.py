@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     priority_low: int = 9
 
     # Server settings  
-    gunicorn_workers: int = Field(3, env="GUNICORN_WORKERS")
+    gunicorn_workers: int = Field(5, env="GUNICORN_WORKERS")
     uvicorn_log_level: str = "info"
 
     class Config:

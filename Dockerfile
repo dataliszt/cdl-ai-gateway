@@ -28,7 +28,7 @@ RUN mkdir -p /var/log/cdl-gateway
 # 환경변수 설정 (메모리 누수 방지)
 ENV PYTHONPATH=/app \
     PYTHONUNBUFFERED=1 \
-    GUNICORN_WORKERS=3 \
+    GUNICORN_WORKERS=5 \
     GUNICORN_MAX_REQUESTS=10000 \
     GUNICORN_MAX_REQUESTS_JITTER=1000
 
