@@ -1,22 +1,65 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, validator
 
 
 class Settings(BaseSettings):
     app_name: str = "CDL Gateway"
-    environment: str = "production"
-    log_level: str = "INFO"
+    environment: str = Field("production", env="ENVIRONMENT")
+    log_level: str = Field("INFO", env="LOG_LEVEL")
 
-    # RabbitMQ settings (Traditional 크레덴셜 방식 우선)
-    rabbitmq_hostname: str = Field("localhost", env="RABBITMQ_HOSTNAME")
-    rabbitmq_port: str = Field("5672", env="RABBITMQ_PORT")
-    rabbitmq_user: str = Field("guest", env="RABBITMQ_USER")
-    rabbitmq_password: str = Field("guest", env="RABBITMQ_PASSWORD")
+    # API Keys
+    openai_api_key: str = Field(..., env="OPENAI_API_KEY")
+    anthropic_api_key: str = Field(..., env="ANTHROPIC_API_KEY") 
+    google_api_key: str = Field(..., env="GOOGLE_API_KEY")
+    openai_api_key_realtime: str = Field(..., env="OPENAI_API_KEY_REALTIME")
+    anthropic_api_key_realtime: str = Field(..., env="ANTHROPIC_API_KEY_REALTIME")
+    google_api_key_realtime: str = Field(..., env="GOOGLE_API_KEY_REALTIME")
+    
+    # AWS Region
+    aws_region: str = Field(..., env="AWS_REGION")
+    
+    # RabbitMQ 설정
+    rabbitmq_user: str = Field(..., env="RABBITMQ_USER")
+    rabbitmq_password: str = Field(..., env="RABBITMQ_PASSWORD")
+    rabbitmq_hostname: str = Field(..., env="RABBITMQ_HOSTNAME")
+    rabbitmq_port: str = Field(..., env="RABBITMQ_PORT")
+    rabbitmq_port2: str = Field(..., env="RABBITMQ_PORT2")
+    rabbitmq_port3: str = Field(..., env="RABBITMQ_PORT3")
+    
+    # 클러스터 연결 설정
+    rabbitmq_connection_timeout: int = Field(10, env="RABBITMQ_CONNECTION_TIMEOUT")
+    rabbitmq_retry_attempts: int = Field(3, env="RABBITMQ_RETRY_ATTEMPTS")
+    rabbitmq_retry_delay: float = Field(2.0, env="RABBITMQ_RETRY_DELAY")
+    rabbitmq_heartbeat: int = Field(600, env="RABBITMQ_HEARTBEAT")
     
     # AWS MQ settings (fallback 용도)
     rabbitmq_broker_id: Optional[str] = Field(None, env="RABBITMQ_BROKER_ID")
     rabbitmq_region: str = Field("ap-northeast-2", env="RABBITMQ_REGION")
+    
+    def get_rabbitmq_nodes(self) -> List[Dict[str, Any]]:
+        """RabbitMQ 클러스터 노드 정보 반환 (개별 포트별)"""
+        nodes = [
+            {
+                "host": self.rabbitmq_hostname,
+                "port": int(self.rabbitmq_port),
+                "user": self.rabbitmq_user,
+                "password": self.rabbitmq_password
+            },
+            {
+                "host": self.rabbitmq_hostname,
+                "port": int(self.rabbitmq_port2),
+                "user": self.rabbitmq_user,
+                "password": self.rabbitmq_password
+            },
+            {
+                "host": self.rabbitmq_hostname,
+                "port": int(self.rabbitmq_port3),
+                "user": self.rabbitmq_user,
+                "password": self.rabbitmq_password
+            }
+        ]
+        return nodes
 
     # Queue settings
     default_queue: str = "sokind"
@@ -26,8 +69,8 @@ class Settings(BaseSettings):
     priority_medium: int = 2
     priority_low: int = 9
 
-    # Server settings
-    gunicorn_workers: int = 3
+    # Server settings  
+    gunicorn_workers: int = Field(3, env="GUNICORN_WORKERS")
     uvicorn_log_level: str = "info"
 
     class Config:

@@ -110,19 +110,7 @@ class SokindRequest(BaseModel):
     class Config:
         populate_by_name = True
     
-    def to_specialized_model(self) -> Union[
-        BasicEducationModel,
-        FillOutBlankScriptModel,
-        ListenAndRepeatModel,
-        KeywordMemorizationModel,
-        VirtualActorDialogueV1Model,
-        VirtualActorDialogueV2Model,
-        VirtualActorDialogueV2ForeignDemoModel,
-        PeriodicReportModel,
-        VirtualActorDialogueV3AugmentationModel,
-        VirtualActorDialogueV3QuestionModel,
-        VirtualActorDialogueV3ReportModel,
-    ]:
+    def to_specialized_model(self):
         """
         edu_type에 따라 적절한 특화 모델로 변환
         
@@ -131,15 +119,13 @@ class SokindRequest(BaseModel):
         """
         # edu_type 10 (V3)의 경우 generation_type에 따라 세분화
         if self.edu_type == 10:
-            if self.generation_type == "AUGMENTATION":
-                return VirtualActorDialogueV3AugmentationModel(**self.dict())
-            elif self.generation_type == "QUESTION":
-                return VirtualActorDialogueV3QuestionModel(**self.dict())
-            elif self.generation_type == "REPORT":
-                return VirtualActorDialogueV3ReportModel(**self.dict())
-            else:
-                # 기본적으로 AUGMENTATION 모델 사용
-                return VirtualActorDialogueV3AugmentationModel(**self.dict())
+            v3_models = {
+                "AUGMENTATION": VirtualActorDialogueV3AugmentationModel,
+                "QUESTION": VirtualActorDialogueV3QuestionModel,
+                "REPORT": VirtualActorDialogueV3ReportModel,
+            }
+            model_class = v3_models.get(self.generation_type, VirtualActorDialogueV3AugmentationModel)
+            return model_class(**self.dict())
         
         # 일반 교육 타입들
         model_class = EDUCATION_TYPE_MODELS.get(self.edu_type, BasicEducationModel)
