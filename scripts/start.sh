@@ -8,6 +8,15 @@ echo "Max requests: ${GUNICORN_MAX_REQUESTS:-10000}"
 echo "Max requests jitter: ${GUNICORN_MAX_REQUESTS_JITTER:-1000}"
 echo "Deployment slot: ${DEPLOYMENT_SLOT:-default}"
 
+# AWS Secrets Manager에서 환경변수 로드
+echo "📡 Loading environment variables from AWS Secrets Manager..."
+if uv run python -m app.core.secrets; then
+    echo "✅ Environment variables loaded successfully"
+else
+    echo "❌ Failed to load environment variables, exiting..."
+    exit 1
+fi
+
 # 로그 디렉토리 생성
 mkdir -p /var/log/cdl-gateway
 
