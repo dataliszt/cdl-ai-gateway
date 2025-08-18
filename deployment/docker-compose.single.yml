@@ -1,3 +1,9 @@
+# 외부 로드밸런서/프록시(예: AWS ALB/NLB, 상위 Nginx)가 앞단에 있을 때 사용하는 단일 서비스용 Compose 파일입니다.
+# - 이 파일은 API 컨테이너 1개만 실행합니다.
+# - HTTPS/TLS 종료, 라우팅, 블루/그린 분산 등은 외부 LB가 담당합니다.
+# - 포트 8000을 노출하니, LB에서 8000으로 프록시/포워딩하도록 설정하세요.
+# - 로컬 스모크 테스트 시에도 사용할 수 있습니다(직접 http://<host>:8000/ 호출).
+
 services:
   cdl-gateway:
     image: cdl-gateway:latest
@@ -36,3 +42,4 @@ services:
 networks:
   cdl-network:
     driver: bridge
+

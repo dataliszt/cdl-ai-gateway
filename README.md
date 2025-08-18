@@ -49,7 +49,7 @@ curl -k https://localhost/status/
 ```bash
 git clone <repository-url>
 cd cdl-ai-gateway
-docker-compose -f deployment/docker-compose.prod.yml up -d
+docker-compose -f deployment/docker-compose.single.yml up -d  # 외부 LB/Nginx 앞단에서 단일 서비스로 사용할 때
 ```
 
 3) 헬스 체크
