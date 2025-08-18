@@ -195,6 +195,21 @@ temp/
 # Docker
 .dockerignore
 
+# Nginx
+nginx/logs/
+nginx/*.log
+nginx/error.log
+nginx/access.log
+nginx/pid/
+nginx/*.pid
+nginx/temp/
+nginx/cache/
+nginx/client_body_temp/
+nginx/proxy_temp/
+nginx/fastcgi_temp/
+nginx/uwsgi_temp/
+nginx/scgi_temp/
+
 # Local development
 .env.local
 .env.development
