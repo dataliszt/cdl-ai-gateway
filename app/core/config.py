@@ -1,6 +1,10 @@
 from typing import Optional, List, Dict, Any
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, validator
+import os
+
+# AWS Secrets Manager에서 환경변수 로드
+# Secrets 로드는 시작 스크립트에서 수행합니다.
 
 
 class Settings(BaseSettings):
@@ -9,23 +13,23 @@ class Settings(BaseSettings):
     log_level: str = Field("INFO", env="LOG_LEVEL")
 
     # API Keys
-    openai_api_key: str = Field(..., env="OPENAI_API_KEY")
-    anthropic_api_key: str = Field(..., env="ANTHROPIC_API_KEY") 
-    google_api_key: str = Field(..., env="GOOGLE_API_KEY")
-    openai_api_key_realtime: str = Field(..., env="OPENAI_API_KEY_REALTIME")
-    anthropic_api_key_realtime: str = Field(..., env="ANTHROPIC_API_KEY_REALTIME")
-    google_api_key_realtime: str = Field(..., env="GOOGLE_API_KEY_REALTIME")
+    openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
+    anthropic_api_key: Optional[str] = Field(None, env="ANTHROPIC_API_KEY") 
+    google_api_key: Optional[str] = Field(None, env="GOOGLE_API_KEY")
+    openai_api_key_realtime: Optional[str] = Field(None, env="OPENAI_API_KEY_REALTIME")
+    anthropic_api_key_realtime: Optional[str] = Field(None, env="ANTHROPIC_API_KEY_REALTIME")
+    google_api_key_realtime: Optional[str] = Field(None, env="GOOGLE_API_KEY_REALTIME")
     
     # AWS Region
-    aws_region: str = Field(..., env="AWS_REGION")
+    aws_region: Optional[str] = Field(None, env="AWS_REGION")
     
     # RabbitMQ 설정
-    rabbitmq_user: str = Field(..., env="RABBITMQ_USER")
-    rabbitmq_password: str = Field(..., env="RABBITMQ_PASSWORD")
-    rabbitmq_hostname: str = Field(..., env="RABBITMQ_HOSTNAME")
-    rabbitmq_port: str = Field(..., env="RABBITMQ_PORT")
-    rabbitmq_port2: str = Field(..., env="RABBITMQ_PORT2")
-    rabbitmq_port3: str = Field(..., env="RABBITMQ_PORT3")
+    rabbitmq_user: Optional[str] = Field(None, env="RABBITMQ_USER")
+    rabbitmq_password: Optional[str] = Field(None, env="RABBITMQ_PASSWORD")
+    rabbitmq_hostname: Optional[str] = Field(None, env="RABBITMQ_HOSTNAME")
+    rabbitmq_port: Optional[str] = Field(None, env="RABBITMQ_PORT")
+    rabbitmq_port2: Optional[str] = Field(None, env="RABBITMQ_PORT2")
+    rabbitmq_port3: Optional[str] = Field(None, env="RABBITMQ_PORT3")
     
     # 클러스터 연결 설정
     rabbitmq_connection_timeout: int = Field(10, env="RABBITMQ_CONNECTION_TIMEOUT")
@@ -39,6 +43,10 @@ class Settings(BaseSettings):
     
     def get_rabbitmq_nodes(self) -> List[Dict[str, Any]]:
         """RabbitMQ 클러스터 노드 정보 반환 (개별 포트별)"""
+        # 필수 값이 없으면 빈 리스트 반환 (나중에 연결 시점에 검증)
+        if not (self.rabbitmq_hostname and self.rabbitmq_user and self.rabbitmq_password and self.rabbitmq_port):
+            return []
+
         nodes = [
             {
                 "host": self.rabbitmq_hostname,
@@ -79,9 +87,23 @@ class Settings(BaseSettings):
     gunicorn_workers: int = Field(5, env="GUNICORN_WORKERS")
     uvicorn_log_level: str = "info"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    # Pydantic v2 설정 로딩 방식
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+    )
+
+class LazySettings:
+    _settings_instance: Optional[Settings] = None
+
+    def _ensure_loaded(self) -> None:
+        if self._settings_instance is None:
+            # 환경변수는 start.sh에서 선주입됨
+            self._settings_instance = Settings()
+
+    def __getattr__(self, name: str):
+        self._ensure_loaded()
+        return getattr(self._settings_instance, name)
 
 
-settings = Settings()
+settings = LazySettings()

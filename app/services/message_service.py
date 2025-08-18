@@ -22,27 +22,28 @@ class MessageService:
     """
     
     # 비즈니스 우선순위 → 시스템 우선순위 매핑
-    PRIORITY_MAPPING = {
-        "urgent": settings.priority_high,
-        "high": settings.priority_high,
-        "normal": settings.priority_medium,
-        "medium": settings.priority_medium,
-        "low": settings.priority_low,
-    }
+    @property
+    def PRIORITY_MAPPING(self):
+        return {
+            "urgent": settings.priority_high,
+            "high": settings.priority_high,
+            "normal": settings.priority_medium,
+            "medium": settings.priority_medium,
+            "low": settings.priority_low,
+        }
     
     # 교육 타입별 기본 큐 매핑
-    QUEUE_MAPPING = {
-        # 기본 교육 타입들 (1-6)
-        1: settings.default_queue,
-        2: settings.default_queue,
-        3: settings.default_queue,
-        4: settings.default_queue,
-        5: settings.default_queue,
-        6: settings.default_queue,
-        
-        # 정기 리포트
-        9: "periodic_report",
-    }
+    @property
+    def QUEUE_MAPPING(self):
+        return {
+            1: settings.default_queue,
+            2: settings.default_queue,
+            3: settings.default_queue,
+            4: settings.default_queue,
+            5: settings.default_queue,
+            6: settings.default_queue,
+            9: "periodic_report",
+        }
     
     def get_queue_for_model(self, model: SokindBaseModel) -> str:
         """모델의 비즈니스 특성에 따라 적절한 큐 결정"""

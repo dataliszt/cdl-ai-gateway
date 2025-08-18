@@ -9,17 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 
-# AWS Secrets Manager에서 환경변수 로드 (config 임포트 전에 실행)
-try:
-    from app.core.secrets import load_secrets_to_env
-    print("🔐 AWS Secrets Manager 환경변수 로드 시도...")
-    if load_secrets_to_env():
-        print("✅ Secrets Manager 환경변수 로드 성공")
-    else:
-        print("⚠️ Secrets Manager 로드 실패 - 로컬 환경변수 사용")
-except Exception as e:
-    print(f"⚠️ Secrets Manager 모듈 로드 실패: {e}")
-    print("로컬 환경변수(.env) 사용")
+# Secrets 로드는 컨테이너 시작 스크립트(start.sh)에서 선행되며, 애플리케이션 코드에서는 수행하지 않습니다.
 
 from app.core.config import settings
 from app.core.logging_config import configure_logging

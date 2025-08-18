@@ -38,6 +38,8 @@ class RabbitMQClusterClient:
         self.connection = None
         self.channel = None
         self.cluster_nodes = settings.get_rabbitmq_nodes()
+        if not self.cluster_nodes:
+            raise RuntimeError("RabbitMQ configuration is missing. Check environment variables.")
         self.current_node_index = 0
         self.node_status = {}
         self.connection_attempts = {}
