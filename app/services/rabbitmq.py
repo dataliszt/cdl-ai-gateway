@@ -179,22 +179,35 @@ class RabbitMQClusterClient:
             return False
     
     def declare_queue(self, queue_name: str, **kwargs) -> bool:
-        """큐 선언"""
+        """큐 선언 (Quorum Queue 사용)"""
         if not self._ensure_connection():
             raise ConnectionError("Failed to establish RabbitMQ connection")
         
         try:
-            # 기본 설정: 지속성, 메시지 지속성 활성화
+            # 기본 설정: Quorum Queue, 지속성, 메시지 지속성 활성화
             default_kwargs = {
                 'queue': queue_name,
-                'durable': True,
-                'exclusive': False,
-                'auto_delete': False
+                'durable': True,  # Quorum queues는 항상 durable
+                'exclusive': False,  # Quorum queues는 exclusive 불가
+                'auto_delete': False,  # Quorum queues는 auto_delete 불가
+                'arguments': {
+                    'x-queue-type': 'quorum',  # Quorum Queue 타입 지정
+                    'x-quorum-initial-group-size': settings.quorum_initial_group_size,  # 초기 quorum 그룹 크기
+                    'x-delivery-limit': settings.quorum_delivery_limit,  # 재배달 제한 (Dead Letter 처리용)
+                    'x-max-in-memory-length': settings.quorum_max_in_memory_length,  # 메모리에 보관할 최대 메시지 수
+                    'x-max-in-memory-bytes': settings.quorum_max_in_memory_bytes  # 메모리에 보관할 최대 바이트
+                }
             }
+            
+            # 사용자 정의 arguments가 있으면 병합
+            if 'arguments' in kwargs:
+                default_kwargs['arguments'].update(kwargs['arguments'])
+                kwargs.pop('arguments')
+            
             default_kwargs.update(kwargs)
             
             self.channel.queue_declare(**default_kwargs)
-            logger.info(f"Queue declared: {queue_name}")
+            logger.info(f"Quorum queue declared: {queue_name}")
             return True
             
         except Exception as e:

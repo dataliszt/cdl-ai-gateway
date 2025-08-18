@@ -68,6 +68,12 @@ class Settings(BaseSettings):
     priority_high: int = 1
     priority_medium: int = 2
     priority_low: int = 9
+    
+    # Quorum Queue settings
+    quorum_initial_group_size: int = Field(3, env="QUORUM_INITIAL_GROUP_SIZE")  # 클러스터 노드 수에 맞춰 조정
+    quorum_delivery_limit: int = Field(10, env="QUORUM_DELIVERY_LIMIT")  # 재배달 제한
+    quorum_max_in_memory_length: int = Field(100000, env="QUORUM_MAX_IN_MEMORY_LENGTH")  # 메모리 메시지 수
+    quorum_max_in_memory_bytes: int = Field(104857600, env="QUORUM_MAX_IN_MEMORY_BYTES")  # 100MB
 
     # Server settings  
     gunicorn_workers: int = Field(5, env="GUNICORN_WORKERS")

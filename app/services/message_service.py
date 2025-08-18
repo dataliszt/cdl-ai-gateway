@@ -146,9 +146,21 @@ class MessageService:
         try:
             sender = MessageSender()
             
-            # 큐가 존재하지 않으면 생성
+            # 큐가 존재하지 않으면 생성 (Quorum Queue로 생성)
             if not sender.queue_exists(queue):
-                sender.declare_queue(queue)
+                # 특정 큐에 대한 커스텀 설정이 필요한 경우 여기에 추가
+                queue_args = {}
+                
+                # 우선순위가 높은 큐는 더 큰 메모리 제한 설정
+                if priority >= settings.priority_high:
+                    queue_args = {
+                        'arguments': {
+                            'x-max-in-memory-length': 200000,  # 고우선순위 큐는 더 많은 메시지 보관
+                            'x-max-in-memory-bytes': 209715200  # 200MB
+                        }
+                    }
+                
+                sender.declare_queue(queue, **queue_args)
                 
             # 메시지 전송
             sender.send_message(
