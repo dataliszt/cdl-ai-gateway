@@ -36,6 +36,8 @@ mkdir -p /var/log/cdl-gateway
 
 # Gunicorn 서버 시작 (로그는 stdout/stderr로 출력)
 echo "🚀 Starting Gunicorn server..."
+# 컨테이너 로컬 타임존을 KST로 설정 (로그 타임스탬프 일관성)
+export TZ=Asia/Seoul
 exec uv run gunicorn app.main:app \
     --bind 0.0.0.0:8000 \
     --workers ${GUNICORN_WORKERS:-5} \
