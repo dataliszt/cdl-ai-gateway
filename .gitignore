@@ -193,7 +193,8 @@ tmp/
 temp/
 
 # Docker
-# .dockerignore
+.dockerignore
+deployment/docker-compose.prod.yml
 
 # Nginx
 nginx/logs/
