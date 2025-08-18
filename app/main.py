@@ -2,10 +2,24 @@
 CDL Gateway 애플리케이션 진입점
 FastAPI 애플리케이션 초기화 및 실행
 """
+import os
+import sys
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
+
+# AWS Secrets Manager에서 환경변수 로드 (config 임포트 전에 실행)
+try:
+    from app.core.secrets import load_secrets_to_env
+    print("🔐 AWS Secrets Manager 환경변수 로드 시도...")
+    if load_secrets_to_env():
+        print("✅ Secrets Manager 환경변수 로드 성공")
+    else:
+        print("⚠️ Secrets Manager 로드 실패 - 로컬 환경변수 사용")
+except Exception as e:
+    print(f"⚠️ Secrets Manager 모듈 로드 실패: {e}")
+    print("로컬 환경변수(.env) 사용")
 
 from app.core.config import settings
 from app.core.logging_config import configure_logging

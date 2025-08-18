@@ -5,7 +5,7 @@
 ## ✨ 주요 특징
 
 - **🔐 AWS Secrets Manager 통합**: 프로덕션 환경의 안전한 설정 관리
-- **🚀 IAM Role 기반 인증**: EC2 Instance Profile을 통한 자동 자격증명 처리
+- **🚀 IAM Role 기반 인증**: EC2/ECS에서 자동 자격증명 처리 (AWS 키 하드코딩 불필요)
 - **🔄 RabbitMQ 클러스터 지원**: 고가용성 다중 노드 자동 fallback
 - **📊 통합 메시지 서비스**: 교육 타입별 최적화된 큐 라우팅
 - **🛡️ 구조화된 미들웨어**: Request ID 추적, 상세 요청 로깅
@@ -108,14 +108,16 @@ make run  # 또는 uv run uvicorn app.main:app --reload
 
 ### 🏗️ 프로덕션 배포
 
-**1. EC2 IAM Role 설정**
+**1. IAM Role 설정** ([상세 가이드](docs/AWS_CREDENTIALS_GUIDE.md))
 ```bash
-# AWS Console에서 IAM Role 생성
-Role Name: CDLGatewayRole
-Policy: CDLGatewaySecretsPolicy (secretsmanager:GetSecretValue)
+# 새 EC2 인스턴스용
+bash deployment/setup_ec2_instance.sh
 
-# EC2 인스턴스에 Role 연결
-EC2 Console → Instances → Modify IAM role
+# 기존 인스턴스에 권한 추가
+bash deployment/add_policy_to_existing_role.sh
+
+# ECS/Fargate용
+bash deployment/setup_ecs_task.sh
 ```
 
 **2. AWS Secrets Manager 설정**
@@ -158,11 +160,14 @@ git clone <repository-url>
 cd cdl-ai-gateway
 
 # Docker 배포 (IAM Role 자동 인증)
-docker-compose up -d
+docker-compose -f deployment/docker-compose.prod.yml up -d
 
 # 상태 확인
 curl http://your-ec2-ip/status/
 curl http://your-ec2-ip/status/rabbitmq
+
+# 로그 확인 (시크릿 로드 확인)
+docker logs cdl-gateway | grep "IAM 역할"
 ```
 
 ### 주요 명령어

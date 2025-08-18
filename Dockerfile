@@ -30,7 +30,10 @@ ENV PYTHONPATH=/app \
     PYTHONUNBUFFERED=1 \
     GUNICORN_WORKERS=5 \
     GUNICORN_MAX_REQUESTS=10000 \
-    GUNICORN_MAX_REQUESTS_JITTER=1000
+    GUNICORN_MAX_REQUESTS_JITTER=1000 \
+    ENVIRONMENT=production \
+    LOG_LEVEL=INFO \
+    AWS_REGION=ap-northeast-2
 
 # 비루트 사용자 생성
 RUN useradd --create-home --shell /bin/bash app && \

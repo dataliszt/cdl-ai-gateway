@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  cdl-gateway:
+    image: cdl-gateway:latest
+    container_name: cdl-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      # 기본 환경변수 (AWS Secrets Manager에서 오버라이드됨)
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - AWS_REGION=ap-northeast-2
+      # EC2/ECS에서는 IAM 역할 자동 사용
+      # 로컬 테스트 시에만 아래 주석 해제
+      # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      # - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - /var/log/cdl-gateway:/var/log/cdl-gateway
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/status/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - cdl-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+networks:
+  cdl-network:
+    driver: bridge
