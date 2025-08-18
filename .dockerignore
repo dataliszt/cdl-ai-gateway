@@ -1,0 +1,70 @@
+# Git 
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# Documentation
+docs/
+# Troubleshooting notes (not needed in image)
+# troubleshooting/
+
+# README.md는 pyproject.toml에서 참조하므로 제외하지 않음
+# README.md
+
+# Tests
+tests/
+
+# Temporary files
+tmp/
+temp/
+
+# macOS
+.DS_Store
+
+# Deployment scripts
+deployment/
+
+# Nginx configuration
+nginx/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Makefile
+Makefile
+
+# Claude (AI assistant files)
+.claude/

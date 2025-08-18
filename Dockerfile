@@ -8,16 +8,19 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# uv 설치
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+# uv 설치 (BuildKit 불필요)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh -s -- \
+    && cp /root/.local/bin/uv /usr/local/bin/uv \
+    && chmod 755 /usr/local/bin/uv
 
 # Python 종속성 복사 및 설치
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev
 
-# 애플리케이션 코드 및 스크립트 복사
+# 애플리케이션 코드 및 필요한 스크립트만 복사
 COPY app/ ./app/
-COPY scripts/ ./scripts/
+COPY scripts/start.sh ./scripts/start.sh
+COPY scripts/export-secrets.py ./scripts/export-secrets.py
 
 # 스크립트 실행 권한 부여
 RUN chmod +x ./scripts/start.sh
