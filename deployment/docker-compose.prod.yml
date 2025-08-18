@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   cdl-gateway:
     image: cdl-gateway:latest

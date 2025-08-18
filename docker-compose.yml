@@ -1,27 +1,4 @@
-version: '3.8'
-
 services:
-  # 로그 디렉토리 초기화 서비스
-  init-logs:
-    image: alpine:latest
-    volumes:
-      - ./logs:/logs
-      - ./nginx:/nginx
-    command: >
-      sh -c "
-        echo '📁 로그 디렉토리 초기화 중...'
-        mkdir -p /logs/{blue,green,nginx}
-        mkdir -p /nginx/{ssl,certbot}
-        chmod -R 755 /logs
-        chmod -R 755 /nginx/certbot
-        echo '✅ 로그 디렉토리 생성 완료'
-        echo '  - /logs/blue (Blue 인스턴스 로그)'
-        echo '  - /logs/green (Green 인스턴스 로그)'
-        echo '  - /logs/nginx (Nginx 로그)'
-        echo '  - /nginx/ssl (SSL 인증서)'
-        echo '  - /nginx/certbot (Let\\'s Encrypt)'
-      "
-    restart: "no"
   # 블루/그린 배포를 위한 API 인스턴스들
   cdl-gateway-blue:
     build: 
@@ -40,9 +17,7 @@ services:
     volumes:
       - ./logs/blue:/var/log/cdl-gateway
     restart: unless-stopped
-    depends_on:
-      init-logs:
-        condition: service_completed_successfully
+
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/status/"]
       interval: 30s
@@ -69,9 +44,7 @@ services:
     volumes:
       - ./logs/green:/var/log/cdl-gateway
     restart: unless-stopped
-    depends_on:
-      init-logs:
-        condition: service_completed_successfully
+
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/status/"]
       interval: 30s
@@ -92,12 +65,8 @@ services:
       - ./logs/nginx:/var/log/nginx
       - ./nginx/certbot:/var/www/certbot:ro
     depends_on:
-      init-logs:
-        condition: service_completed_successfully
-      cdl-gateway-blue:
-        condition: service_healthy
-      cdl-gateway-green:
-        condition: service_healthy
+      - cdl-gateway-blue
+      - cdl-gateway-green
     restart: unless-stopped
     networks:
       - cdl-network
